@@ -1,7 +1,6 @@
 const fetch = require('node-fetch');
 
-const api_url = process.env.API_URL || 'http://localhost:8080/v1/graphql';
-const admin_secret = process.env.ADMIN_SECRET || 'myadminsecretkey';
+const { admin_secret, api_url } = require('./config');
 
 function request(query, credentials, variables) {
   const body = { query };

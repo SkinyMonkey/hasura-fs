@@ -18,6 +18,8 @@ app.get('/download/:file_id', download.handler(fs))
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+app.use('/events', events.securityCheck)
 app.post('/events', events.handler(fs))
 
 app.listen('8000', function(){

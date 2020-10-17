@@ -35,6 +35,8 @@ services:
         }
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
 
+      EVENT_SECRET: myeventsecretkey
+
 volumes:
   db_data:
 

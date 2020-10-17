@@ -16,14 +16,7 @@
   insert_permissions:
   - role: user
     permission:
-      check:
-        parent:
-          permissions:
-            _and:
-            - beneficiary_id:
-                _eq: X-Hasura-User-Id
-            - role:
-                _eq: writer
+      check: {}
       set:
         owner_id: x-hasura-User-Id
       columns:
@@ -79,7 +72,7 @@
       num_retries: 0
       interval_sec: 10
       timeout_sec: 60
-    webhook: http://192.168.0.107:8000/events
+    webhook: http://192.168.0.167:8000/events
 - table:
     schema: public
     name: file_state
@@ -128,7 +121,7 @@
       num_retries: 0
       interval_sec: 10
       timeout_sec: 60
-    webhook: http://192.168.0.107:8000/events
+    webhook: http://192.168.0.167:8000/events
 - table:
     schema: public
     name: fs_user_state

@@ -3,6 +3,7 @@
 // and make every event use it in hasura
 // less bookeeping on that side, less error prone.
 
+const { event_secret } = require('./config');
 const api = require('./api');
 
 function createContainer(fs, user_id) {
@@ -40,7 +41,11 @@ function fsUserEvent(fs, event) {
 function fileEvent(fs, event) {
 	switch (event.op) {
 		case 'DELETE':
-			let { owner_id, id } = event.data.old;
+			let { owner_id, id, state } = event.data.old;
+
+      if (state == 'uploading') {
+        return Promise.resolve()
+      }
 
 			return fs.deleteBlob(owner_id, id)
 				.then(() => {
@@ -50,6 +55,14 @@ function fileEvent(fs, event) {
 		default:
 			return null
 	}
+}
+
+exports.securityCheck = (req, res, next) => {
+  if (req.headers['x-hasura-event-secret'] != event_secret) {
+    res.status(403).send({err: 'Forbidden'})
+    return
+  }
+  next();
 }
 
 exports.handler = (fs) => (req, res) => {
