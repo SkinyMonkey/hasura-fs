@@ -11,6 +11,8 @@ exports.handler = (fs) => (req, res) => {
 
       return pipe(req);
     })
+    .then(() => api.setFileAsReadyWithSize(file_id, req.headers['content-length']))
+    .then(() => res.end())
     .catch((err) => {
       if (err.code) {
         console.error(err.message)
@@ -21,10 +23,5 @@ exports.handler = (fs) => (req, res) => {
       console.error(err)
       res.status(500).send({err: 'Internal error'})
       return api.updateFileState(file_id, 'error')
-    })
-    .then(() => res.end())
-    .then(() => api.setFileAsReadyWithSize(file_id, req.headers['content-length']))
-    .catch((err) => {
-      console.error(err)
     })
 };

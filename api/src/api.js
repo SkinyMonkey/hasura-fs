@@ -32,6 +32,8 @@ function request(query, credentials, variables) {
   })
 }
 
+exports.request = request
+
 const adminCredentials = { 'x-hasura-admin-secret': admin_secret };
 
 exports.updateUserFsState = (user_id, state) => {

@@ -1,6 +1,12 @@
 {
+  "scripts": {
+    "tests": "yarn mocha tests/download_upload_test.js"
+  },
   "dependencies": {
     "express": "^4.17.1",
     "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "mocha": "^8.2.0"
   }
 }
