@@ -16,7 +16,26 @@
   insert_permissions:
   - role: user
     permission:
-      check: {}
+      check:
+        _or:
+        - parent_id:
+            _is_null: true
+        - _and:
+          - parent:
+              is_folder:
+                _eq: true
+          - _or:
+            - parent:
+                owner_id:
+                  _eq: X-Hasura-User-Id
+            - permissions:
+                _and:
+                - beneficiary_id:
+                    _eq: X-Hasura-User-Id
+                - role:
+                    _in:
+                    - owner
+                    - writer
       set:
         owner_id: x-hasura-User-Id
       columns:
@@ -40,8 +59,18 @@
       - state
       - updated_at
       filter:
-        owner_id:
-          _eq: X-Hasura-User-Id
+        _or:
+        - owner_id:
+            _eq: X-Hasura-User-Id
+        - permissions:
+            _and:
+            - beneficiary_id:
+                _eq: X-Hasura-User-Id
+            - role:
+                _in:
+                - owner
+                - writer
+                - reader
   update_permissions:
   - role: user
     permission:
@@ -51,8 +80,37 @@
       - name
       - parent_id
       filter:
-        owner_id:
-          _eq: X-Hasura-User-Id
+        _and:
+        - _or:
+          - owner_id:
+              _eq: X-Hasura-User-Id
+          - permissions:
+              _and:
+              - beneficiary_id:
+                  _eq: X-Hasura-User-Id
+              - role:
+                  _in:
+                  - owner
+                  - writer
+        - _or:
+          - parent_id:
+              _is_null: true
+          - _and:
+            - parent:
+                is_folder:
+                  _eq: true
+            - _or:
+              - parent:
+                  owner_id:
+                    _eq: X-Hasura-User-Id
+              - permissions:
+                  _and:
+                  - beneficiary_id:
+                      _eq: X-Hasura-User-Id
+                  - role:
+                      _in:
+                      - owner
+                      - writer
       check: null
       set:
         owner_id: x-hasura-User-Id
@@ -60,8 +118,15 @@
   - role: user
     permission:
       filter:
-        owner_id:
-          _eq: X-Hasura-User-Id
+        _or:
+        - owner_id:
+            _eq: X-Hasura-User-Id
+        - permissions:
+            _and:
+            - beneficiary_id:
+                _eq: X-Hasura-User-Id
+            - role:
+                _eq: owner
   event_triggers:
   - name: file_events
     definition:
@@ -73,6 +138,9 @@
       interval_sec: 10
       timeout_sec: 60
     webhook: http://192.168.0.167:8000/events
+    headers:
+    - name: x-hasura-event-secret
+      value_from_env: EVENT_SECRET
 - table:
     schema: public
     name: file_state
@@ -122,6 +190,9 @@
       interval_sec: 10
       timeout_sec: 60
     webhook: http://192.168.0.167:8000/events
+    headers:
+    - value: EVENT_SECRET
+      name: x-hasura-event-secret
 - table:
     schema: public
     name: fs_user_state
