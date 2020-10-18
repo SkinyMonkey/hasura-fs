@@ -160,10 +160,9 @@
   - role: user
     permission:
       check: {}
-      set:
-        user_id: x-hasura-User-Id
-      columns: []
-      backend_only: false
+      columns:
+      - user_id
+      backend_only: true
   select_permissions:
   - role: user
     permission:
