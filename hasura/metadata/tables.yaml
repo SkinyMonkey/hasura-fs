@@ -167,7 +167,7 @@
       num_retries: 0
       interval_sec: 10
       timeout_sec: 60
-    webhook: http://192.168.0.167:8000/events
+    webhook_from_env: EVENTS_WEBHOOK_URL
     headers:
     - name: x-hasura-event-secret
       value_from_env: EVENT_SECRET
@@ -218,7 +218,7 @@
       num_retries: 0
       interval_sec: 10
       timeout_sec: 60
-    webhook: http://192.168.0.167:8000/events
+    webhook_from_env: EVENTS_WEBHOOK_URL
     headers:
     - value: EVENT_SECRET
       name: x-hasura-event-secret

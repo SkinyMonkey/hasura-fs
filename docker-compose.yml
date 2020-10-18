@@ -36,6 +36,7 @@ services:
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
 
       EVENT_SECRET: myeventsecretkey
+      EVENTS_WEBHOOK_URL: http://192.168.0.167:8000/events
 
 volumes:
   db_data:
