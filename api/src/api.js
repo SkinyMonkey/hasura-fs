@@ -61,6 +61,15 @@ exports.getFile = (token, file_id) => {
 
   return request(query, credentials, variables)
     .then((data) => data.file_by_pk)
+    .then((file) => {
+      if (!file) {
+        const err = new Error('File not found')
+        err.code = 404;
+        throw err;
+      }
+
+      return file
+    })
 };
 
 exports.updateFileState = (file_id, state) => {
