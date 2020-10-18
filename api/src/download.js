@@ -1,7 +1,6 @@
 const common = require('./common');
 const api = require('./api');
 
-// FIXME : handle req.on('aborted')?
 exports.handler = (fs) => (req, res) => {
   const { file_id } = req.params;
 

@@ -75,7 +75,6 @@
   - role: user
     permission:
       columns:
-      - is_folder
       - metadata
       - name
       - parent_id
@@ -111,7 +110,38 @@
                       _in:
                       - owner
                       - writer
-      check: null
+      check:
+        _and:
+        - _or:
+          - owner_id:
+              _eq: X-Hasura-User-Id
+          - permissions:
+              _and:
+              - beneficiary_id:
+                  _eq: X-Hasura-User-Id
+              - role:
+                  _in:
+                  - owner
+                  - writer
+        - _or:
+          - parent_id:
+              _is_null: true
+          - _and:
+            - parent:
+                is_folder:
+                  _eq: true
+            - _or:
+              - parent:
+                  owner_id:
+                    _eq: X-Hasura-User-Id
+              - permissions:
+                  _and:
+                  - beneficiary_id:
+                      _eq: X-Hasura-User-Id
+                  - role:
+                      _in:
+                      - owner
+                      - writer
       set:
         owner_id: x-hasura-User-Id
   delete_permissions:
@@ -149,7 +179,7 @@
     schema: public
     name: fs_user
   array_relationships:
-  - name: permissionsByBeneficiaryId
+  - name: permissions
     using:
       foreign_key_constraint_on:
         column: beneficiary_id
@@ -162,7 +192,7 @@
       check: {}
       columns:
       - user_id
-      backend_only: true
+      backend_only: false
   select_permissions:
   - role: user
     permission:
