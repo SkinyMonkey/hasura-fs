@@ -1,10 +1,12 @@
 const http = require('http');
 const fs = require('fs');
 const assert = require('assert');
+const path = require('path');
 const {exec} = require('child_process');
 
 const {token} = require('./config');
-const {request, admin_credentials} = require('../src/api.js');
+const {request, admin_credentials} = require('../src/api');
+const {fspath} = require('../src/fs/local');
 
 function delay(t) {
   return (v)  => {
@@ -34,7 +36,7 @@ function clearDB() {
   return request(query, admin_credentials)
 }
 
-function createUser(id) {
+function createUser() {
   const query = `mutation InsertUser($user_id: uuid!) {
     insert_fs_user_one(object: {user_id: $user_id}) {
       user_id
@@ -46,12 +48,14 @@ function createUser(id) {
   };
 
   return request(query, admin_credentials, variables)
+    .then((data) => data.insert_fs_user_one)
 }
 
 function createFile(name) {
   const query = `mutation InsertFile($metadata: json!, $name: String!) {
       insert_file_one(object: {metadata: $metadata, name: $name}) {
         id
+        owner_id
       }
   }`;
 
@@ -84,7 +88,7 @@ function uploadFileFrom(src) {
           throw res.statusCode
         }
 
-        resolve(data.id);
+        resolve(data);
       });
 
       fs.createReadStream(src, { highWaterMark: 500 })
@@ -155,6 +159,14 @@ function fileEqual(src, dst) {
   }
 }
 
+function fileExists(container_id, blob_id) {
+  const fs_user_path = blob_id ?
+    path.join(fspath, container_id, blob_id):
+    path.join(fspath, container_id);
+
+  assert.equal(fs.existsSync(fs_user_path), true)
+}
+
 // NOTES : delays are here to give time for the event to be fired and treated
 
 describe('Basic tests', () => {
@@ -171,7 +183,10 @@ describe('Basic tests', () => {
   describe('Create a user', () => {
     it('should create a user', () => {
       return createUser()
-        .then(delay(1000));
+        .then(delay(1000))
+        .then((data) => {
+          fileExists(data.user_id)
+        });
     });
   });
   
@@ -181,6 +196,10 @@ describe('Basic tests', () => {
   
       return createFile(src)
         .then(uploadFileFrom(src))
+        .then(({owner_id, id}) => {
+          fileExists(owner_id, id)
+          return id;
+        });
     });
   });
   
@@ -191,6 +210,10 @@ describe('Basic tests', () => {
   
       return createFile(src)
         .then(uploadFileFrom(src))
+        .then(({owner_id, id}) => {
+          fileExists(owner_id, id)
+          return id;
+        })
         .then(delay(100))
         .then(downloadFileTo(dst))
         .then(fileEqual(src, dst))

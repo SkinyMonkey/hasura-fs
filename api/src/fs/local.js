@@ -4,6 +4,8 @@ const util = require('util');
 
 const fspath = '/tmp/fs/';
 
+exports.fspath = fspath;
+
 if (!fs.existsSync(fspath)) {
   fs.mkdirSync(fspath);
 }
