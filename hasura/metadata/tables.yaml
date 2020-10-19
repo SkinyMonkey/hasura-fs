@@ -220,8 +220,8 @@
       timeout_sec: 60
     webhook_from_env: EVENTS_WEBHOOK_URL
     headers:
-    - value: EVENT_SECRET
-      name: x-hasura-event-secret
+    - name: x-hasura-event-secret
+      value_from_env: EVENT_SECRET
 - table:
     schema: public
     name: fs_user_state
