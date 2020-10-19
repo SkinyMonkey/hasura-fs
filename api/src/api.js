@@ -34,7 +34,9 @@ function request(query, credentials, variables) {
 
 exports.request = request
 
-const adminCredentials = { 'x-hasura-admin-secret': admin_secret };
+const admin_credentials = { 'x-hasura-admin-secret': admin_secret };
+
+exports.admin_credentials = admin_credentials;
 
 exports.updateUserFsState = (user_id, state) => {
   const query =`mutation UpdateUserFsState($user_id: uuid!, $state: fs_user_state_enum!) {
@@ -45,7 +47,7 @@ exports.updateUserFsState = (user_id, state) => {
 
   const variables = {user_id, state};
 
-  return request(query, adminCredentials, variables);
+  return request(query, admin_credentials, variables);
 };
 
 exports.getFile = (token, file_id) => {
@@ -83,7 +85,7 @@ exports.updateFileState = (file_id, state) => {
 
   const variables = {id: file_id, state};
 
-  return request(query, adminCredentials, variables);
+  return request(query, admin_credentials, variables);
 };
 
 exports.setFileAsReadyWithSize = (file_id, size) => {
@@ -95,5 +97,5 @@ exports.setFileAsReadyWithSize = (file_id, size) => {
 
   const variables = {id: file_id, size};
 
-  return request(query, adminCredentials, variables);
+  return request(query, admin_credentials, variables);
 };

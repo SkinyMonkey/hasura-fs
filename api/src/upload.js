@@ -13,6 +13,7 @@ exports.handler = (fs) => (req, res) => {
     })
     .then(() => api.setFileAsReadyWithSize(file_id, req.headers['content-length']))
     .then(() => res.end())
+    .then(() => console.log('Upload done : ', file_id))
     .catch((err) => {
       if (err.code) {
         console.error(err.message)

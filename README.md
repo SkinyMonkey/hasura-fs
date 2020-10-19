@@ -51,7 +51,12 @@ that could be implemented are:
 - I noticed today that a user with reader permission on a file can still upload to it.
 A manual check of this in the node.js API is the only solution I see.
 
-- no testing, i did a few ugly scripts but it would need a lot more
+- No deep testing, i did a few ugly scripts but it would need a lot more
+
+- I wanted to only allow user creation from a backend app, but could not because of this issue: https://github.com/hasura/graphql-engine/issues/6035
+
+- The tests sometime fail because the event takes some time to fire and the local folder might not be created yet. I could have mitigated it with a subscription that wait over the right user fs state but that's a bit overkill for the scope of this toy app
+That's BTW a good question : how would one would wait for the event architecture to be ready and have treated the event? Is subscription the only way here?
 
 # To run this:
 

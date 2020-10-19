@@ -15,7 +15,7 @@ exports.createContainer = (container_id) => {
 
 exports.deleteContainer = (container_id) => {
   const filepath = path.join(fspath, container_id);
-  return util.promisify(fs.rmdir)(filepath);
+  return util.promisify(fs.rmdir)(filepath, {recursive: true});
 }
 
 exports.uploadToBlob = (container_id, file_id) => {
