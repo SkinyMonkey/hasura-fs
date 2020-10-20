@@ -1,4 +1,5 @@
 docker-compose up -d;
+sleep 5;
 cd hasura;
 hasura migrate apply migrations/*_init;
 hasura seeds apply seeds/*.sql;
