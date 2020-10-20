@@ -63,7 +63,4 @@ That's BTW a good question : how would one would wait for the event architecture
 set the EVENTS\_WEBHOOK\_URL in docker-compose.yaml based on your current machine IP.
 
 Then do:
-$> docker-compose up -d;
-$> cd api
-$> yarn install
-$> node main.js
+```$> ./init.sh```
