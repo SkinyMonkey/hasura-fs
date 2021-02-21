@@ -56,6 +56,7 @@ exports.getFile = (token, file_id) => {
         owner_id,
         state,
         is_folder,
+        permissions,
       }
   }`;
 

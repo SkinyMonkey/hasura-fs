@@ -2,6 +2,9 @@
     schema: public
     name: file
   object_relationships:
+  - name: owner
+    using:
+      foreign_key_constraint_on: owner_id
   - name: parent
     using:
       foreign_key_constraint_on: parent_id
@@ -17,25 +20,29 @@
   - role: user
     permission:
       check:
-        _or:
-        - parent_id:
-            _is_null: true
-        - _and:
-          - parent:
-              is_folder:
-                _eq: true
+        _and:
+          - owner:
+              state:
+                _eq: ready
           - _or:
-            - parent:
-                owner_id:
-                  _eq: X-Hasura-User-Id
-            - permissions:
-                _and:
-                - beneficiary_id:
-                    _eq: X-Hasura-User-Id
-                - role:
-                    _in:
-                    - owner
-                    - writer
+            - parent_id:
+                _is_null: true
+            - _and:
+              - parent:
+                  is_folder:
+                    _eq: true
+              - _or:
+                - parent:
+                    owner_id:
+                      _eq: X-Hasura-User-Id
+                - permissions:
+                    _and:
+                    - beneficiary_id:
+                        _eq: X-Hasura-User-Id
+                    - role:
+                        _in:
+                        - owner
+                        - writer
       set:
         owner_id: x-hasura-User-Id
       columns:
