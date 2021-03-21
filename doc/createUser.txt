@@ -1,0 +1,10 @@
+%% visualize/edit in https://mermaid-js.github.io/mermaid-live-editor
+
+%% Create user
+sequenceDiagram
+    Frontend-->>Hasura: User
+    Hasura-->>Frontend: 201 Created
+    Hasura-->>REST API: Insert User Event
+    REST API-->>Azure blob: Create container
+    Azure blob-->>REST API: 201 OK
+    REST API-->>Hasura: UpdateUser({state: "ready"})

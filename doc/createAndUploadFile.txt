@@ -1,0 +1,41 @@
+%% visualize/edit in https://mermaid-js.github.io/mermaid-live-editor
+
+%% Without third party services
+sequenceDiagram
+    Frontend-->>Hasura: CreateFile(name, size, metadata)
+    Hasura-->>Frontend: file.id
+    Frontend-->>REST API: PATCH /files/{file.id} data stream
+    REST API-->>Hasura: UpdateFile(file.id, {state: "ready"})
+
+%% With DB
+sequenceDiagram
+    Frontend-->>Hasura: CreateFile(name, size, metadata)
+    Hasura-->>SQL DB: Insert(name, size, metadata, state: "uploading") in File
+    SQL DB-->>Hasura: file.id
+    Hasura-->>Frontend: file.id
+    Frontend-->>REST API: PATCH /files/{file.id} data stream
+    REST API-->>Hasura: UpdateFile(file.id, {state: "ready"})
+    Hasura-->>SQL DB: Update(file.id, {state: "ready"})
+
+%% With Azure blob
+sequenceDiagram
+    Frontend-->>Hasura: CreateFile(name, size, metadata)
+    Hasura-->>Frontend: file.id
+    Frontend-->>REST API: PATCH /files/{file.id} file data stream
+    REST API-->>Azure blob: file data stream
+    Azure blob-->>REST API: Created 201
+    REST API-->>Hasura: UpdateFile(file.id, {state: "ready"})
+    REST API-->>Frontend: OK 200
+
+%% With everything
+sequenceDiagram
+    Frontend-->>Hasura: CreateFile(name, size, metadata)
+    Hasura-->>SQL DB: Insert(name, size, metadata, state: "uploading") in File
+    SQL DB-->>Hasura: file.id
+    Hasura-->>Frontend: file.id
+    Frontend-->>REST API: PATCH /files/{file.id} data stream
+    REST API-->>Azure blob: file data stream
+    Azure blob-->>REST API: Created 201
+    REST API-->>Hasura: UpdateFile(file.id, {state: "ready"})
+    Hasura-->>SQL DB: Update(file.id, {state: "ready"})
+    REST API-->>Frontend: OK 200

@@ -1,0 +1,8 @@
+%% visualize/edit in https://mermaid-js.github.io/mermaid-live-editor
+
+%% Download file
+sequenceDiagram
+    Frontend-->>REST API: GET /file/{file.id}/data
+    REST API-->>Hasura: Authorization/Permissions
+    Hasura-->>REST API: 200 OK
+    REST API-->>Frontend: File data stream

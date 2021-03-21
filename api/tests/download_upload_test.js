@@ -220,6 +220,26 @@ describe('Basic tests', () => {
     });
   });
 
+  /*
+  describe('Folder download', () => {
+    it('should download from a previously uploaded folder with children', () => {
+      const src = 'main.js';
+      const dst = '/tmp/test';
+  
+      return createFolderFrom(src).
+        .then(uploadFolderFrom(src))
+        .then(({owner_id, id}) => {
+          fileExists(owner_id, id)
+          return id;
+        })
+        .then(delay(100))
+        .then(downloadFileTo(dst))
+// TODO : check that zipped folder contains data
+//        .then(fileEqual(src, dst))
+    });
+  });
+  */
+
   after(() => {
     return execute(`kill ${pid}`)
   });

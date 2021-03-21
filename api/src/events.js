@@ -41,6 +41,12 @@ function fsUserEvent(fs, event) {
 function fileEvent(fs, event) {
 	switch (event.op) {
 		case 'DELETE':
+      if (event.data.is_folder == true) {
+        // TODO : remove files where parent_id == id?
+        //        test if this is not done via cascading of parent_id foreign key
+        return Promise.resolve()
+      }
+
 			let { owner_id, id, state } = event.data.old;
 
       if (state == 'uploading') {

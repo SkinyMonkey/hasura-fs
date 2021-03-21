@@ -21,11 +21,13 @@ app.get('/health', (req, res) => {
 app.post('/upload/:file_id', upload.handler(fs))
 app.get('/download/:file_id', download.handler(fs))
 
+// app.post('/mkdirp', actions.mkdirp);
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.use('/events', events.securityCheck)
-app.post('/events', events.handler(fs))
+app.use('/events', events.securityCheck);
+app.post('/events', events.handler(fs));
 
 app.listen('8000', function(){
 	console.log('Server listening on port 8000');

@@ -33,11 +33,17 @@ exports.uploadToBlob = (container_id, file_id) => {
   });
 }
 
-exports.downloadFromBlob = (container_id, file_id) => {
+function streamFromBlob(container_id, file_id) {
   const filepath = path.join(fspath, container_id, file_id);
 
+  return fs.createReadStream(filepath);
+}
+
+exports.streamFromBlob = streamFromBlob;
+
+exports.downloadFromBlob = (container_id, file_id) => {
   return (res) => new Promise((resolve, reject) => {
-    const readStream = fs.createReadStream(filepath)
+    const readStream = streamFromBlob(container_id, file_id)
       .on('error', reject)
       .on('finish', resolve)
       .on('open', () => {

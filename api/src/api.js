@@ -52,6 +52,19 @@ exports.updateUserFsState = (user_id, state) => {
   return request(query, admin_credentials, variables);
 };
 
+exports.createFolder = (token, parent_id, name) => {
+  const query = `mutation CreateFolder($parent_id: uuid, name: String!) {
+   insert_file_one(object: {name: $name, is_folder: true, parent_id: $parent_id})
+  }`
+
+  const credentials = { 'authorization' : token };
+
+  const variables = {parent_id, name};
+
+  return request(query, credentials, variables)
+    .then((data) => data.insert_file_one)
+};
+
 exports.getFile = (token, file_id) => {
   const query = `query GetFile($file_id: uuid!) {
       file_by_pk(id: $file_id) {
@@ -75,6 +88,33 @@ exports.getFile = (token, file_id) => {
       }
 
       return file
+    })
+};
+
+exports.getFolderContent = (token, folder_id) => {
+  const query = `query GetFolderContent{
+    file(where: {parent_id: {_eq: $folder_id}}) {
+      id
+      name
+      is_folder
+      owner_id
+    }
+  }`
+
+  const credentials = { 'authorization' : token };
+
+  const variables = {folder_id};
+
+  return request(query, credentials, variables)
+    .then((data) => data.file)
+    .then((files) => {
+      if (files.length == 0) {
+        const err = new Error('Empty folder')
+        err.code = 204;
+        throw err;
+      }
+
+      return files
     })
 };
 
