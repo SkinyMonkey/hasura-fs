@@ -6,7 +6,6 @@ exports.handler = (fs) => (req, res) => {
 
   return api.getFile(req.headers.authorization, file_id)
     .then((data) => {
-      // TODO : check if user is owner_id or has permission as owner or writer on file
       return data
     })
     .then(common.isFileWithState('Upload', 'uploading'))
@@ -19,13 +18,14 @@ exports.handler = (fs) => (req, res) => {
     .then(() => res.end())
     .then(() => console.log('Upload done :', file_id))
     .catch((err) => {
+      console.log('ERROR:', err)
+
       if (err.code) {
-        console.error(err.message)
+        console.log(err.message)
         res.status(err.code).send({err: err.message})
         return
       }
 
-      console.error(err)
       res.status(500).send({err: 'Internal error'})
       return api.updateFileState(file_id, 'error')
     })

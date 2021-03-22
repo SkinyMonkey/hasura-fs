@@ -67,7 +67,7 @@ exports.securityCheck = (req, res, next) => {
 
 exports.handler = (fs) => (req, res) => {
 	var operation;
-  
+
 	switch (req.body.table.name) {
 		case 'fs_user':
 			operation = fsUserEvent(fs, req.body.event);
@@ -79,14 +79,14 @@ exports.handler = (fs) => (req, res) => {
 
 		default:
 			const err = `Unknown table : ${req.body.table.name}`;
-      console.error(err)
+      console.log(err)
 			res.status(404).send({err});
       return
 	}
 
 	if (!operation) {
 			const err = `Unknown event ${req.body.event.op} on table : ${req.body.table.name}`;
-      console.error(err)
+      console.log(err)
 			res.status(404).send({err});
 			return
 	}
@@ -96,7 +96,7 @@ exports.handler = (fs) => (req, res) => {
 			res.status(200).send({});
 		})
 		.catch((err) => {
-			console.error(err);
+			console.log(err);
 			res.status(500).send({err});
 		});
 }

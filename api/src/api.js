@@ -17,6 +17,8 @@ function request(query, credentials, variables) {
     body.variables = variables;
   }
 
+  // TODO : function to log call as curl
+
   return fetch(api_url, {
     method: 'POST',
     headers: headers,
@@ -56,7 +58,6 @@ exports.getFile = (token, file_id) => {
         owner_id,
         state,
         is_folder,
-        permissions,
       }
   }`;
 

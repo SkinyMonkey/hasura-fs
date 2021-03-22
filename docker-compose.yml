@@ -4,7 +4,7 @@ services:
     image: postgres:12
     restart: always
     volumes:
-    - db_data:/var/lib/postgresql/data
+    - hasura_fs_data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: postgrespassword
 
@@ -36,8 +36,7 @@ services:
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
 
       EVENT_SECRET: myeventsecretkey
-      EVENTS_WEBHOOK_URL: http://192.168.0.167:8000/events
+      EVENTS_WEBHOOK_URL: http://192.168.0.149:8000/events
 
 volumes:
-  db_data:
-
+  hasura_fs_data:
