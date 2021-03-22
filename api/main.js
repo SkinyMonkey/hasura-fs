@@ -12,7 +12,7 @@ const events = require('./src/events');
 
 // TODO : log events with custom morgan logs
 //        replace console.log calls by morgan logger ones?
-//app.use(morgan('dev'))
+app.use(morgan('dev'))
 
 app.get('/health', (req, res) => {
   res.status(200).send({});

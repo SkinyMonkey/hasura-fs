@@ -2,7 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const assert = require('assert');
 const path = require('path');
-const {exec} = require('child_process');
+const {exec, spawn} = require('child_process');
 
 const {token} = require('./config');
 const {request, admin_credentials} = require('../src/api');
@@ -51,16 +51,23 @@ function createUser() {
     .then((data) => data.insert_fs_user_one)
 }
 
-function createFile(name) {
-  const query = `mutation InsertFile($metadata: json!, $name: String!) {
-      insert_file_one(object: {metadata: $metadata, name: $name}) {
+function createINode(name, is_folder, parent_id) {
+  if (!is_folder) {
+    is_folder = false
+  }
+  if (!parent_id) {
+    parent_id = null
+  }
+
+  const query = `mutation InsertFile($metadata: json!, $name: String!, $is_folder: Boolean!, $parent_id: uuid) {
+      insert_file_one(object: {metadata: $metadata, name: $name, is_folder: $is_folder, parent_id: $parent_id}) {
         id
         owner_id
       }
   }`;
 
   const credentials = { 'authorization' : token };
-  const variables = {name: name, metadata: {}};
+  const variables = {name: name, metadata: {}, is_folder: is_folder, parent_id: parent_id};
 
   return request(query, credentials, variables)
     .then((data) => data.insert_file_one)
@@ -128,28 +135,87 @@ function downloadFileTo(dst) {
   }
 }
 
+function uploadOneFile(src, parent_id) {
+  const fileName = path.basename(src)
+  return createINode(fileName, false, parent_id).then(uploadFileFrom(src))
+}
+
+function walkDir(dir, cb) {
+  let children = []
+
+  return fs.promises.readdir(dir)
+    .then((files) => {
+      return Promise.all(files.map(f => {
+        const dirPath = path.join(dir, f);
+        const is_folder = fs.statSync(dirPath).isDirectory();
+
+        if (is_folder) {
+          children.push(dirPath)
+        }
+
+        return cb(dirPath, is_folder)
+      }))
+    })
+    .then(() => Promise.all(children.map(dirPath => walkDir(dirPath, cb))))
+};
+
+function uploadFolder(src) {
+  let id = ''
+  return createINode(src, true) // we create the 'first level folder'
+    .then((data) => {
+      let parent_id = data.id
+      id = data.id
+
+      return walkDir(src, (childSrc, is_folder) => {
+        const fileName = path.basename(childSrc)
+
+        if (is_folder) {
+          return createINode(fileName, true, parent_id)
+            .then(data => {
+              console.log("new parent id : ", data.id)
+              return data
+            })
+            .then(data => parent_id = data.id)
+        } else {
+          return uploadOneFile(childSrc, parent_id)
+        }
+      }) 
+    })
+    .then(() => id)
+}
+
 function execute(cmd, canfail) {
   return new Promise((resolve, reject) => {
-    const pid = exec(cmd, { maxBuffer: 1024 * 500 }, (error, stdout, stderr) => {
-      if (error) {
+
+    const logStream = fs.createWriteStream('/tmp/logs.txt', {flags: 'a'});
+
+    const scmd = cmd.split(' ')
+    const api = spawn(scmd[0], scmd.slice(1));
+
+    api.stdout.pipe(logStream);
+    api.stderr.pipe(logStream);
+
+    // TODO : flag for empty stdout and stderr
+    //        throw error if something displayed on it
+    //        put back console.error?
+
+    api.on('close', function (code) {
+      // TODO : verify code, display logs
+//      console.log('child process exited with code ' + code, cmd);
+      /*
+       *
         if (!canfail) {
           assert.equal(error, null);
         }
-      } else if (stdout) {
-        assert.equal(stdout, '');
-      } else {
-        assert.equal(stderr, '');
-      }
-      
-      if (stdout) {
-        console.log('[API logs]----------------------------------------------------------');
-        console.log(stdout)
-        console.log('[End]---------------------------------------------------------------');
-      }
+
+      console.log('[API logs]----------------------------------------------------------');
+      console.log(stdout)
+      console.log('[End]---------------------------------------------------------------');
+      */
     });
 
-    resolve(pid);
-  });
+    resolve(api)
+  })
 }
 
 function fileEqual(src, dst) {
@@ -194,8 +260,7 @@ describe('Basic tests', () => {
     it('should create and upload a file', () => {
       const src = 'main.js';
   
-      return createFile(src)
-        .then(uploadFileFrom(src))
+      return uploadOneFile(src)
         .then(({owner_id, id}) => {
           fileExists(owner_id, id)
           return id;
@@ -208,8 +273,7 @@ describe('Basic tests', () => {
       const src = 'main.js';
       const dst = '/tmp/test';
   
-      return createFile(src)
-        .then(uploadFileFrom(src))
+      return uploadOneFile(src)
         .then(({owner_id, id}) => {
           fileExists(owner_id, id)
           return id;
@@ -220,25 +284,20 @@ describe('Basic tests', () => {
     });
   });
 
-  /*
+  // TODO : test with a file that has some children folders
   describe('Folder download', () => {
     it('should download from a previously uploaded folder with children', () => {
-      const src = 'main.js';
+      const src = 'tests';
       const dst = '/tmp/test';
   
-      return createFolderFrom(src).
-        .then(uploadFolderFrom(src))
-        .then(({owner_id, id}) => {
-          fileExists(owner_id, id)
-          return id;
-        })
+      // FIXME : uploadFolder does not upload correctly? no children found
+      return uploadFolder(src) // TODO : test more,
         .then(delay(100))
         .then(downloadFileTo(dst))
 // TODO : check that zipped folder contains data
 //        .then(fileEqual(src, dst))
     });
   });
-  */
 
   after(() => {
     return execute(`kill ${pid}`)

@@ -5,7 +5,7 @@ const api = require('./api');
 const archiver = require('archiver');
 
 // addChildrenToArchive recursively add children of a folder to an archive
-function addChildrenToArchive(token, folder_id, archive, prefix) {
+function addChildrenToArchive(token, fs, folder_id, archive, prefix) {
   return api.getFolderContent(token, folder_id)
     .then((files) => {
       return Promise.all(files.map((file) => {
@@ -22,9 +22,9 @@ function addChildrenToArchive(token, folder_id, archive, prefix) {
         return addChildrenToArchive(token, file.id, archive, path.join(prefix, file.name))
       }))
     })
+    .catch(console.log)
 }
 
-// TODO : see https://amiantos.net/zip-multiple-files-on-aws-s3/
 function downloadChildrenOf(token, fs, name, owner_id, folder_id, archive_type) {
     return (res) => new Promise((resolve, reject) => {
       const archive = archiver('zip')
@@ -37,7 +37,7 @@ function downloadChildrenOf(token, fs, name, owner_id, folder_id, archive_type) 
 
       archive.pipe(res)
 
-      return addChildrenToArchive(token, folder_id, archive, '')
+      return addChildrenToArchive(token, fs, folder_id, archive, '')
         .then(() => archive.finalize())
         .then(resolve)
     })
@@ -53,9 +53,10 @@ exports.handler = (fs) => (req, res) => {
       let pipe = null;
 
       if (data.is_folder) {
-        pipe = fs.downloadChildrenOf(token, fs, data.name, data.owner_id, file_id, 'zip'); // TODO : get archive type from req?
+        // TODO : get archive type from req?
+        pipe = downloadChildrenOf(token, fs, data.name, data.owner_id, file_id, 'zip');
       } else {
-        pipe = downloadFromBlob(fs, data.owner_id, file_id);
+        pipe = fs.downloadFromBlob(data.owner_id, file_id);
       }
 
       return pipe(res);

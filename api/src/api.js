@@ -92,7 +92,7 @@ exports.getFile = (token, file_id) => {
 };
 
 exports.getFolderContent = (token, folder_id) => {
-  const query = `query GetFolderContent{
+  const query = `query GetFolderContent($folder_id: uuid!) {
     file(where: {parent_id: {_eq: $folder_id}}) {
       id
       name
@@ -107,15 +107,6 @@ exports.getFolderContent = (token, folder_id) => {
 
   return request(query, credentials, variables)
     .then((data) => data.file)
-    .then((files) => {
-      if (files.length == 0) {
-        const err = new Error('Empty folder')
-        err.code = 204;
-        throw err;
-      }
-
-      return files
-    })
 };
 
 exports.updateFileState = (file_id, state) => {
