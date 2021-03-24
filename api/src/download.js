@@ -6,7 +6,6 @@ const archiver = require('archiver');
 
 // addChildrenToArchive recursively add children of a folder to an archive
 function addChildrenToArchive(token, fs, folder_id, archive, prefix) {
-  console.log("Adding children of ", folder_id)
   return api.getFolderContent(token, folder_id)
     .then((files) => {
       return Promise.all(files.map((file) => {

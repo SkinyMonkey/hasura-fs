@@ -185,63 +185,22 @@ function uploadFolderFrom(src) {
 function execute(cmd, canfail) {
   return new Promise((resolve, reject) => {
 
-    const logStream = fs.createWriteStream('/tmp/logs.txt', {flags: 'a'});
+    const logStream = fs.createWriteStream(logsPath, {flags: 'a'});
 
     const scmd = cmd.split(' ')
     const api = spawn(scmd[0], scmd.slice(1));
 
+    api.stderr.on('data', () => {
+      if (!canfail) {
+        execute(`kill ${api.pid}`)
+      }
+    })
+
     api.stdout.pipe(logStream);
     api.stderr.pipe(logStream);
 
-    // TODO : flag for empty stdout and stderr
-    //        throw error if something displayed on it
-    //        put back console.error?
-
-    api.on('close', function (code) {
-      // TODO : verify code, display logs
-//      console.log('child process exited with code ' + code, cmd);
-      /*
-       *
-        if (!canfail) {
-          assert.equal(error, null);
-        }
-
-      console.log('[API logs]----------------------------------------------------------');
-      console.log(stdout)
-      console.log('[End]---------------------------------------------------------------');
-      */
-    });
-
     resolve(api)
   })
-}
-
-function fileEqual(src, dst) {
-  return () => {
-    const cmd = `diff ${src} ${dst}`;
-    return execute(cmd);
-  }
-}
-
-function unzipTo(src, dst) {
-  return () => {
-    const cmd = `unzip ${src} -d ${dst}`;
-    return execute(cmd);
-  }
-}
-
-function rm(path) {
-  return () => {
-    const cmd = `rm -rf ${path}`;
-    return execute(cmd);
-  }
-}
-
-function folderEqual(src, dst) {
-  return () => {
-    const cmd = `diff -qr ${src} ${dst}`;
-    return execute(cmd);
-  }
 }
 
 function fileExists(container_id, blob_id) {
@@ -252,12 +211,7 @@ function fileExists(container_id, blob_id) {
   assert.equal(fs.existsSync(fs_user_path), true)
 }
 
-function mkdir(path) {
-  return () => {
-    const cmd = `mkdir ${path}`
-    return execute(cmd)
-  }
-}
+const logsPath = '/tmp/logs.txt'
 
 // NOTES : delays are here to give time for the event to be fired and treated
 
@@ -265,6 +219,7 @@ describe('Basic tests', () => {
   let pid = 0;
 
   before(() => {
+    execute(`rm ${logsPath}`)
     return execute(`node main.js`, true)
       .then((process) => pid = process.pid)
       .then(delay(100))
@@ -306,7 +261,7 @@ describe('Basic tests', () => {
         })
         .then(delay(100))
         .then(downloadFileTo(dst))
-        .then(fileEqual(src, dst))
+        .then(() => execute(`diff ${src} ${dst}`))
     });
   });
 
@@ -316,14 +271,14 @@ describe('Basic tests', () => {
       const dst = '/tmp/zip';
       const zipfile = dst + '/test.zip';
   
-      return rm(dst)()
-        .then(mkdir(dst))
+      return execute(`rm -rf ${dst}`)
+        .then(() => execute(`mkdir ${dst}`))
         .then(uploadFolderFrom(src))
         .then(delay(100))
         .then(downloadFileTo(zipfile))
-        .then(unzipTo(zipfile, dst))
-        .then(rm(zipfile))
-        .then(folderEqual(src, dst))
+        .then(() => execute(`unzip ${zipfile} -d ${dst}`))
+        .then(() => execute(`rm -rf ${zipfile}`))
+        .then(() => execute(`diff -qr ${src} ${dst}`)) // FIXME : would it fail if different?
     });
   });
 
