@@ -159,29 +159,27 @@ function walkDir(dir, cb) {
     .then(() => Promise.all(children.map(dirPath => walkDir(dirPath, cb))))
 };
 
-function uploadFolder(src) {
-  let id = ''
-  return createINode(src, true) // we create the 'first level folder'
-    .then((data) => {
-      let parent_id = data.id
-      id = data.id
+function uploadFolderFrom(src) {
+  return () => {
+    let id = ''
+    return createINode(src, true) // we create the 'first level folder'
+      .then((data) => {
+        let parent_id = data.id
+        id = data.id
 
-      return walkDir(src, (childSrc, is_folder) => {
-        const fileName = path.basename(childSrc)
+        return walkDir(src, (childSrc, is_folder) => {
+          const fileName = path.basename(childSrc)
 
-        if (is_folder) {
-          return createINode(fileName, true, parent_id)
-            .then(data => {
-              console.log("new parent id : ", data.id)
-              return data
-            })
-            .then(data => parent_id = data.id)
-        } else {
-          return uploadOneFile(childSrc, parent_id)
-        }
-      }) 
-    })
-    .then(() => id)
+          if (is_folder) {
+            return createINode(fileName, true, parent_id)
+              .then(data => parent_id = data.id)
+          } else {
+            return uploadOneFile(childSrc, parent_id)
+          }
+        }) 
+      })
+      .then(() => id)
+  }
 }
 
 function execute(cmd, canfail) {
@@ -225,12 +223,40 @@ function fileEqual(src, dst) {
   }
 }
 
+function unzipTo(src, dst) {
+  return () => {
+    const cmd = `unzip ${src} -d ${dst}`;
+    return execute(cmd);
+  }
+}
+
+function rm(path) {
+  return () => {
+    const cmd = `rm -rf ${path}`;
+    return execute(cmd);
+  }
+}
+
+function folderEqual(src, dst) {
+  return () => {
+    const cmd = `diff -qr ${src} ${dst}`;
+    return execute(cmd);
+  }
+}
+
 function fileExists(container_id, blob_id) {
   const fs_user_path = blob_id ?
     path.join(fspath, container_id, blob_id):
     path.join(fspath, container_id);
 
   assert.equal(fs.existsSync(fs_user_path), true)
+}
+
+function mkdir(path) {
+  return () => {
+    const cmd = `mkdir ${path}`
+    return execute(cmd)
+  }
 }
 
 // NOTES : delays are here to give time for the event to be fired and treated
@@ -284,18 +310,20 @@ describe('Basic tests', () => {
     });
   });
 
-  // TODO : test with a file that has some children folders
   describe('Folder download', () => {
     it('should download from a previously uploaded folder with children', () => {
-      const src = 'tests';
-      const dst = '/tmp/test';
+      const src = 'src';
+      const dst = '/tmp/zip';
+      const zipfile = dst + '/test.zip';
   
-      // FIXME : uploadFolder does not upload correctly? no children found
-      return uploadFolder(src) // TODO : test more,
+      return rm(dst)()
+        .then(mkdir(dst))
+        .then(uploadFolderFrom(src))
         .then(delay(100))
-        .then(downloadFileTo(dst))
-// TODO : check that zipped folder contains data
-//        .then(fileEqual(src, dst))
+        .then(downloadFileTo(zipfile))
+        .then(unzipTo(zipfile, dst))
+        .then(rm(zipfile))
+        .then(folderEqual(src, dst))
     });
   });
 
