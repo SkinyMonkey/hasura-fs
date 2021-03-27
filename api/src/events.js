@@ -40,13 +40,6 @@ function fsUserEvent(fs, event) {
 
 function fileEvent(fs, event) {
 	switch (event.op) {
-    case 'INSERT':
-      if (!event.data.new.is_folder) {
-        return Promise.resolve();
-      }
-
-      return api.setFileAsReadyWithSize(event.data.new.id, 0);
-
 		case 'DELETE':
       if (event.data.old.is_folder) {
         return Promise.resolve();
