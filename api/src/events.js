@@ -40,15 +40,22 @@ function fsUserEvent(fs, event) {
 
 function fileEvent(fs, event) {
 	switch (event.op) {
-		case 'DELETE':
-      if (event.data.is_folder == true) {
-        return Promise.resolve()
+    case 'INSERT':
+      if (!event.data.new.is_folder) {
+        return Promise.resolve();
       }
 
-			let { owner_id, id, state } = event.data.old;
+      return api.setFileAsReadyWithSize(event.data.new.id, 0);
+
+		case 'DELETE':
+      if (event.data.old.is_folder) {
+        return Promise.resolve();
+      }
+
+			const { owner_id, id, state } = event.data.old;
 
       if (state == 'uploading') {
-        return Promise.resolve()
+        return Promise.resolve();
       }
 
 			return fs.deleteBlob(owner_id, id)

@@ -182,6 +182,20 @@ function uploadFolderFrom(src) {
   }
 }
 
+function mkdirp(token, path) {
+  const query = `mutation MkdirP($path: String!)  {
+    mkdirp(path: $path) {
+      id
+    }
+  }`;
+
+  const credentials = { 'authorization' : token };
+  const variables = {path};
+
+  return request(query, credentials, variables)
+    .then((data) => data.mkdirp.id)
+}
+
 function execute(cmd, canfail) {
   return new Promise((resolve, reject) => {
 
@@ -281,6 +295,20 @@ describe('Basic tests', () => {
         .then(() => execute(`diff -qr ${src} ${dst}`)) // FIXME : would it fail if different?
     });
   });
+
+  describe('Mkdir -p', () => {
+    it('should create a tree of folders based on a unix paht', () => {
+      const path = '/a/b/c';
+
+      return mkdirp(token, path)
+        // .then (id) => file(id).name == 'c', path == 'a.b.c'
+        // folderExists('/a')
+        // folderExists('/a/b')
+        // folderExists('/a/b/c')
+    });
+  });
+
+  // describe('Can't create two inode with the same name')
 
   after(() => {
     return execute(`kill ${pid}`)

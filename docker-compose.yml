@@ -36,7 +36,7 @@ services:
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
 
       EVENT_SECRET: myeventsecretkey
-      EVENTS_WEBHOOK_URL: http://192.168.0.149:8000/events
+      EVENTS_WEBHOOK_URL: http://host.docker.internal:8000/events
 
 volumes:
   hasura_fs_data:

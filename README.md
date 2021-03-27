@@ -60,7 +60,4 @@ That's BTW a good question : how would one would wait for the event architecture
 
 # To run this:
 
-set the EVENTS\_WEBHOOK\_URL in docker-compose.yaml based on your current machine IP.
-
-Then do:
 ```$> ./init.sh```

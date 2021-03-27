@@ -1,19 +1,31 @@
 const api = require('./api');
 const normalize = require('path').normalize
+const errors = require('./errors');
+
+function createFolderFromPreviouslyCreatedOne(token) {
+  return (previousCreatedFolderPromise, subpath) => {
+    // 3 - Once the previous promise is done, we use the created folder' id
+    //     as parent_id for the next one
+    return previousCreatedFolderPromise.then(folder => api.createFolder(token, folder.id, subpath))
+  }
+}
 
 function mkdirp(req, res) {
   const token = req.headers.authorization
-  const { parent_id, path } = req.body.input
+  const { path, parent_id } = req.body.input
 
-  const pathSplit = normalize(path).split('/')
+  const pathSplit = normalize(path).split('/').filter((w) => w)
 
-  // TODO : check if path size > 0
+  if (pathSplit.length == 0) {
+    res.status(400).send(errors.action("Empty path"))
+    return
+  }
 
-  const firstPromise = api.createFolder(token, parent_id, pathSplit[0])
+  // 1 - We create a promise for the first folder creation
+  const firstFolderPromise = api.createFolder(token, parent_id, pathSplit[0])
 
-  pathSplit.slice(1).reduce((previousPromise, subpath) => {
-    return previousPromise.then(folder => api.createFolder(token, folder.id, subpath))
-  }, firstPromise)
+  pathSplit.slice(1)
+  .reduce(createFolderFromPreviouslyCreatedOne(token), firstFolderPromise) // 2 - It is passed as accumulator
   .then(folder => res.json({id: folder.id}))
   .catch(err => {
     console.error(err)
@@ -22,9 +34,5 @@ function mkdirp(req, res) {
     res.status(500).send({errors: ['Internal error']})
   })
 }
-
-//mkdirp({body: {input: {parent_id: "abc", path: "/a/b/c"}}})
-//mkdirp({body: {input: {parent_id: "abc", path: "a/b/c"}}})
-//mkdirp({body: {input: {parent_id: "abc", path: "a/b//c"}}})
 
 exports.mkdirp = mkdirp;

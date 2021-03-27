@@ -9,6 +9,7 @@ const fs = require('./src/fs/selector').getFsBackendFromName();
 const upload = require('./src/upload');
 const download = require('./src/download');
 const events = require('./src/events');
+const actions = require('./src/actions');
 
 // TODO : log events with custom morgan logs
 //        replace console.log calls by morgan logger ones?
@@ -21,10 +22,10 @@ app.get('/health', (req, res) => {
 app.post('/upload/:file_id', upload.handler(fs))
 app.get('/download/:file_id', download.handler(fs))
 
-// app.post('/mkdirp', actions.mkdirp);
-
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+app.post('/mkdirp', actions.mkdirp);
 
 app.use('/events', events.securityCheck);
 app.post('/events', events.handler(fs));

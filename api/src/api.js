@@ -27,11 +27,16 @@ function request(query, credentials, variables) {
   .then(r => r.json())
   .then(r => {
     if (r.errors && r.errors.length > 0) {
+      console.log(query)
       throw r.errors
     }
 
     return r.data
   })
+}
+
+function requestWithToken(token, query, variables) {
+  return request(query, { 'authorization' : token }, variables)
 }
 
 exports.request = request
@@ -53,15 +58,15 @@ exports.updateUserFsState = (user_id, state) => {
 };
 
 exports.createFolder = (token, parent_id, name) => {
-  const query = `mutation CreateFolder($parent_id: uuid, name: String!) {
-   insert_file_one(object: {name: $name, is_folder: true, parent_id: $parent_id})
+  const query = `mutation CreateFolder($parent_id: uuid, $name: String!) {
+   insert_file_one(object: {name: $name, is_folder: true, parent_id: $parent_id}) {
+    id
+   }
   }`
-
-  const credentials = { 'authorization' : token };
 
   const variables = {parent_id, name};
 
-  return request(query, credentials, variables)
+  return requestWithToken(token, query, variables)
     .then((data) => data.insert_file_one)
 };
 
@@ -74,11 +79,9 @@ exports.getFile = (token, file_id) => {
       }
   }`;
 
-  const credentials = { 'authorization' : token };
-
   const variables = {file_id};
 
-  return request(query, credentials, variables)
+  return requestWithToken(token, query, variables)
     .then((data) => data.file_by_pk)
     .then((file) => {
       if (!file) {
@@ -101,11 +104,9 @@ exports.getFolderContent = (token, folder_id) => {
     }
   }`
 
-  const credentials = { 'authorization' : token };
-
   const variables = {folder_id};
 
-  return request(query, credentials, variables)
+  return requestWithToken(token, query, variables)
     .then((data) => data.file)
 };
 
