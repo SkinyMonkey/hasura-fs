@@ -24,10 +24,12 @@ function request(query, credentials, variables) {
     headers: headers,
     body: JSON.stringify(body)
   })
+  .catch(err => {
+    // TODO : if communication error, throw a specific error
+  })
   .then(r => r.json())
   .then(r => {
     if (r.errors && r.errors.length > 0) {
-      console.log(query)
       throw r.errors
     }
 

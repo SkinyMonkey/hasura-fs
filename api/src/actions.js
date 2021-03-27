@@ -27,11 +27,10 @@ function mkdirp(req, res) {
   pathSplit.slice(1)
   .reduce(createFolderFromPreviouslyCreatedOne(token), firstFolderPromise) // 2 - It is passed as accumulator
   .then(folder => res.json({id: folder.id}))
-  .catch(err => {
-    console.error(err)
-    // TODO : same format as the one returned by hasura?
-    // TODO : check if error not a user one? can we prevent writes to parent_id if not owned for example?
-    res.status(500).send({errors: ['Internal error']})
+  .catch(errors => {
+    // FIXME : check that this is an array of error, not a communication error with hasura or something else
+    //         see api.js:request()
+    res.status(400).send(errors[0]) // FIXME : how to return multiple errors?
   })
 }
 
